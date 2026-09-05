@@ -1,44 +1,59 @@
-# [Project name]
+# TradeVerge Investment Platform
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+TradeVerge is a calm, private-wealth investment platform with public discovery, investor workspaces, and operations tooling.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server
+- `pnpm --filter @workspace/tradeverge run dev` — run the web app
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `supabase-schema.sql` — starter tables for the connected Supabase project
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- API: Express 5 with Supabase access through the Replit connector proxy
+- DB: Supabase PostgreSQL (schema starter in `supabase-schema.sql`)
+- Auth: Replit-managed Clerk with Google OAuth/email verification and role-based investor/admin access
+- Translation: 10-locale built-in dictionary plus optional Google Cloud Translation endpoint
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/tradeverge/src/` — responsive public, investor, auth, and admin surfaces
+- `artifacts/api-server/src/routes/platform.ts` — platform API routes and server-authoritative transitions
+- `artifacts/api-server/src/lib/platform-data.ts` — deterministic preview fixtures
+- `artifacts/api-server/src/lib/supabase.ts` — Supabase connector adapter
+- `lib/api-spec/openapi.yaml` — API contract source of truth
+- `supabase-schema.sql` — external Supabase starter schema
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Financial UI is display-only: money-moving actions are represented as pending/review states until a server-side verification path exists.
+- Manual bank and crypto payment methods are admin-owned, versioned records; customer-facing instructions are never hard-coded as financial truth.
+- Supabase is accessed server-side through the managed connector proxy; local fixtures keep the preview navigable until the external schema is applied.
+- One Clerk session serves both customers and operators; `publicMetadata.role` controls the investor/admin workspace and server-side admin middleware.
+- Campaigns, support, and audit surfaces remain separate from ledger-changing behavior.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The platform includes public investment education and plan discovery, investor dashboard/portfolio/transactions/documents/support flows, and an operations console for KYC, plans, deposits, payment-method configuration, reporting, promotions, and audit activity.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Premium deep-emerald/champagne visual language with restrained, accessible motion.
+- Support up to ten locales with translations applied across all public, investor, and admin surfaces.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Regenerate API client/Zod output after changing `lib/api-spec/openapi.yaml`.
+- Apply `supabase-schema.sql` in the external Supabase project before expecting live persistence; preview fixtures are not financial truth.
+- Add `GOOGLE_TRANSLATE_API_KEY` through workspace secrets to enable dynamic translation at `POST /api/translate`; never put the key in browser code.
+- Enable Google as a sign-in provider in the Clerk Auth pane and assign `publicMetadata.role=admin` only to operator accounts.
 
 ## Pointers
 

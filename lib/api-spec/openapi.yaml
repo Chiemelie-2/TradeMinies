@@ -3,13 +3,19 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TradeVerge investment platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: marketplace
+    description: Published investment plans
+  - name: investor
+    description: Investor dashboard and records
+  - name: admin
+    description: Operations and payment configuration
 paths:
   /healthz:
     get:
@@ -24,6 +30,249 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /translate:
+    post:
+      operationId: translateText
+      tags: [health]
+      summary: Translate interface copy through Google Cloud Translation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TranslateBody"
+      responses:
+        "200":
+          description: Translated text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslateResponse"
+        "400":
+          description: Invalid translation request
+        "503":
+          description: Translation provider is not configured
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [marketplace]
+      summary: List published investment plans
+      responses:
+        "200":
+          description: Investment plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InvestmentPlan"
+  /plans/{id}:
+    get:
+      operationId: getPlan
+      tags: [marketplace]
+      summary: Get an investment plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Investment plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvestmentPlan"
+        "404":
+          description: Plan not found
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [investor]
+      summary: Get the current investor dashboard
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [investor]
+      summary: List recent account activity
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [investor]
+      summary: List transactions
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [investor]
+      summary: List investor documents
+      responses:
+        "200":
+          description: Documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [investor]
+      summary: List investor notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+  /admin/overview:
+    get:
+      operationId: getAdminOverview
+      tags: [admin]
+      summary: Get admin operational overview
+      responses:
+        "200":
+          description: Operational overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+  /admin/payment-methods:
+    get:
+      operationId: listAdminPaymentMethods
+      tags: [admin]
+      summary: List payment methods and versions
+      responses:
+        "200":
+          description: Payment methods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethod"
+    post:
+      operationId: createPaymentMethod
+      tags: [admin]
+      summary: Create a draft manual payment method
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMethodInput"
+      responses:
+        "201":
+          description: Created payment method
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+  /admin/payment-methods/{id}:
+    patch:
+      operationId: updatePaymentMethod
+      tags: [admin]
+      summary: Update payment method status or instructions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentMethodUpdate"
+      responses:
+        "200":
+          description: Updated payment method
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+  /admin/deposits:
+    get:
+      operationId: listAdminDeposits
+      tags: [admin]
+      summary: List deposits awaiting operations review
+      responses:
+        "200":
+          description: Deposit queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deposit"
+  /admin/deposits/{id}/decision:
+    post:
+      operationId: decideDeposit
+      tags: [admin]
+      summary: Decide a manual deposit review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositDecision"
+      responses:
+        "200":
+          description: Updated deposit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deposit"
+  /admin/audit:
+    get:
+      operationId: listAuditLogs
+      tags: [admin]
+      summary: List append-only audit events
+      responses:
+        "200":
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +282,168 @@ components:
           type: string
       required:
         - status
+    TranslateBody:
+      type: object
+      required: [text, targetLocale]
+      properties:
+        text: { type: string }
+        sourceLocale: { type: string, default: en }
+        targetLocale: { type: string }
+    TranslateResponse:
+      type: object
+      required: [text, sourceLocale, targetLocale, provider]
+      properties:
+        text: { type: string }
+        sourceLocale: { type: string }
+        targetLocale: { type: string }
+        provider: { type: string }
+    InvestmentPlan:
+      type: object
+      required: [id, name, category, risk, duration, minimum, fee, liquidity, status, description, color]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        risk: { type: string }
+        duration: { type: string }
+        minimum: { type: number }
+        targetReturn: { type: string }
+        fee: { type: string }
+        liquidity: { type: string }
+        status: { type: string }
+        description: { type: string }
+        color: { type: string }
+    Dashboard:
+      type: object
+      required: [totalValue, availableCash, investedValue, returnPercent, lastUpdated, kycStatus, activeInvestments]
+      properties:
+        totalValue: { type: number }
+        availableCash: { type: number }
+        investedValue: { type: number }
+        returnPercent: { type: number }
+        lastUpdated: { type: string }
+        kycStatus: { type: string }
+        activeInvestments:
+          type: array
+          items: { $ref: "#/components/schemas/ActiveInvestment" }
+    ActiveInvestment:
+      type: object
+      required: [id, plan, amount, value, status, maturity]
+      properties:
+        id: { type: string }
+        plan: { type: string }
+        amount: { type: number }
+        value: { type: number }
+        status: { type: string }
+        maturity: { type: string }
+    ActivityItem:
+      type: object
+      required: [id, title, detail, time, tone]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        detail: { type: string }
+        time: { type: string }
+        tone: { type: string }
+    Transaction:
+      type: object
+      required: [id, type, description, amount, status, date]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        description: { type: string }
+        amount: { type: number }
+        status: { type: string }
+        date: { type: string }
+        reference: { type: string }
+    Document:
+      type: object
+      required: [id, name, type, date, size]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        type: { type: string }
+        date: { type: string }
+        size: { type: string }
+    Notification:
+      type: object
+      required: [id, title, detail, time, category, unread]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        detail: { type: string }
+        time: { type: string }
+        category: { type: string }
+        unread: { type: boolean }
+    AdminOverview:
+      type: object
+      required: [totalUsers, aum, pendingKyc, pendingDeposits, pendingWithdrawals, fees, risk]
+      properties:
+        totalUsers: { type: number }
+        aum: { type: number }
+        pendingKyc: { type: number }
+        pendingDeposits: { type: number }
+        pendingWithdrawals: { type: number }
+        fees: { type: number }
+        risk: { type: string }
+    PaymentMethod:
+      type: object
+      required: [id, type, name, asset, network, destination, status, version, updatedAt]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        name: { type: string }
+        asset: { type: string }
+        network: { type: string }
+        destination: { type: string }
+        status: { type: string }
+        version: { type: number }
+        updatedAt: { type: string }
+        instructions: { type: string }
+        minAmount: { type: number }
+    PaymentMethodInput:
+      type: object
+      required: [type, name, asset, network, destination, instructions]
+      properties:
+        type: { type: string }
+        name: { type: string }
+        asset: { type: string }
+        network: { type: string }
+        destination: { type: string }
+        instructions: { type: string }
+        minAmount: { type: number }
+    PaymentMethodUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        instructions: { type: string }
+        destination: { type: string }
+    Deposit:
+      type: object
+      required: [id, customer, amount, asset, network, reference, status, submittedAt]
+      properties:
+        id: { type: string }
+        customer: { type: string }
+        amount: { type: number }
+        asset: { type: string }
+        network: { type: string }
+        reference: { type: string }
+        status: { type: string }
+        submittedAt: { type: string }
+        method: { type: string }
+    DepositDecision:
+      type: object
+      required: [decision, reason]
+      properties:
+        decision: { type: string }
+        reason: { type: string }
+    AuditLog:
+      type: object
+      required: [id, action, actor, timestamp, outcome]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        actor: { type: string }
+        timestamp: { type: string }
+        outcome: { type: string }
 

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "TradeVerge Investment Platform"
+description = "A premium investment platform with a public discovery experience, investor dashboard, secure money movement workflows, marketplace, support, promotions, and a role-aware operations console backed by Supabase."
+version = "1.0.0"
+id = "artifacts/tradeverge"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19547
+
+[services.development]
+run = "pnpm --filter @workspace/tradeverge run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/tradeverge", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/tradeverge/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19547"
+BASE_PATH = "/"
